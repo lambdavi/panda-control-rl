@@ -5,7 +5,7 @@ from stable_baselines3 import DDPG
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
 
-model = DDPG.load("PandaReach_DDPG_50000_steps")
+model = DDPG.load("checkpoints/PandaReach_DDPG_50000_steps")
 env = gym.make('PandaReach-v3', render_mode="human")
 
 observation, info = env.reset()
