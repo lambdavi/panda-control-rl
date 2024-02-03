@@ -37,7 +37,8 @@ def sample_ddpg_params(trial: optuna.Trial) -> Dict[str, Any]:
     tau = trial.suggest_float("tau", 0.0005, 0.01, log=True)
     learning_starts = trial.suggest_float("learning_starts", 50, 200, log=True)
     learning_rate = trial.suggest_float("lr", 1e-5, 1, log=True)
-
+    print(batch_size)
+    print(buffer_size)
     # Display true values.
     trial.set_user_attr("gamma_", gamma)
     trial.set_user_attr("tau_", tau)
