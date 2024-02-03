@@ -15,7 +15,7 @@ import torch.nn as nn
 N_TRIALS = 100
 N_STARTUP_TRIALS = 5
 N_EVALUATIONS = 2
-N_TIMESTEPS = int(2e4)
+N_TIMESTEPS = int(10e3)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
 N_EVAL_EPISODES = 3
 
@@ -32,8 +32,8 @@ def sample_ddpg_params(trial: optuna.Trial) -> Dict[str, Any]:
     # buffer_size, learning_starts, batch_size, tau, 
 
     gamma = 1.0 - trial.suggest_float("gamma", 0.0001, 0.1, log=True)
-    buffer_size = 10**trial.suggest_int("buffer_size", 3, 7)
-    batch_size = 2**trial.suggest_int("batch_size", 7, 12)
+    buffer_size = 10**trial.suggest_int("buffer_size", 2, 6)
+    batch_size = 2**trial.suggest_int("batch_size", 6, 10)
     tau = trial.suggest_float("tau", 0.0005, 0.01, log=True)
     learning_starts = trial.suggest_float("learning_starts", 50, 200, log=True)
     learning_rate = trial.suggest_float("lr", 1e-5, 1, log=True)
