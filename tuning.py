@@ -35,7 +35,7 @@ def sample_ddpg_params(trial: optuna.Trial) -> Dict[str, Any]:
     buffer_size = 10**trial.suggest_int("buffer_size", 2, 6)
     batch_size = 2**trial.suggest_int("batch_size", 6, 10)
     tau = trial.suggest_float("tau", 0.0005, 0.01, log=True)
-    learning_starts = trial.suggest_float("learning_starts", 50, 200, log=True)
+    learning_starts = trial.suggest_int("learning_starts", 50, 200)
     learning_rate = trial.suggest_float("lr", 1e-4, 0.1, log=True)
     print(batch_size)
     print(buffer_size)
