@@ -19,7 +19,7 @@ N_TIMESTEPS = int(10e3)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
 N_EVAL_EPISODES = 3
 
-ENV_ID = "PandaReachDense-v3"
+ENV_ID = "PandaReach-v3"
 
 DEFAULT_HYPERPARAMS = {
     "policy": "MultiInputPolicy",
