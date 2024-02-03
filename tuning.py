@@ -19,7 +19,7 @@ N_TIMESTEPS = int(2e4)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
 N_EVAL_EPISODES = 3
 
-ENV_ID = "PandaReach-v3"
+ENV_ID = "PandaReachDense-v3"
 
 DEFAULT_HYPERPARAMS = {
     "policy": "MultiInputPolicy",
@@ -33,7 +33,7 @@ def sample_ddpg_params(trial: optuna.Trial) -> Dict[str, Any]:
 
     gamma = 1.0 - trial.suggest_float("gamma", 0.0001, 0.1, log=True)
     buffer_size = 10**trial.suggest_int("buffer_size", 4, 7)
-    batch_size = 2**trial.suggest_int("batch_size", 6, 10)
+    batch_size = 2**trial.suggest_int("batch_size", 7, 12)
     tau = trial.suggest_float("tau", 0.0005, 0.01, log=True)
     learning_starts = trial.suggest_float("learning_starts", 50, 200, log=True)
     learning_rate = trial.suggest_float("lr", 1e-5, 1, log=True)
