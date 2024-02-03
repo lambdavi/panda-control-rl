@@ -22,7 +22,7 @@ env.close()
 
 # EVALUATING
 print("EVALUATING")
-eval_env = gym.make("PandaReach-v3", render_mode="human")
+eval_env = gym.make("PandaReach-v3")
 
 eval_env = Monitor(eval_env)
 # Random Agent, before training
