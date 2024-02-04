@@ -37,8 +37,7 @@ def sample_ddpg_params(trial: optuna.Trial) -> Dict[str, Any]:
     tau = trial.suggest_float("tau", 0.0005, 0.01, log=True)
     learning_starts = trial.suggest_int("learning_starts", 50, 200)
     learning_rate = trial.suggest_float("lr", 1e-4, 0.1, log=True)
-    print(batch_size)
-    print(buffer_size)
+
     # Display true values.
     trial.set_user_attr("gamma_", gamma)
     trial.set_user_attr("buffer_size_", buffer_size)
@@ -134,7 +133,6 @@ if __name__ == "__main__":
     pruner = MedianPruner(n_startup_trials=N_STARTUP_TRIALS, n_warmup_steps=N_EVALUATIONS // 3)
 
     study = optuna.create_study(sampler=sampler, pruner=pruner, direction="maximize")
-    print(study)
     try:
         study.optimize(objective, n_trials=N_TRIALS, timeout=600)
     except KeyboardInterrupt:
