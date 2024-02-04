@@ -41,8 +41,8 @@ def sample_ddpg_params(trial: optuna.Trial) -> Dict[str, Any]:
     print(buffer_size)
     # Display true values.
     trial.set_user_attr("gamma_", gamma)
-    trial.set_user_attr("tau_", tau)
-    trial.set_user_attr("learning_starts_", learning_starts)
+    trial.set_user_attr("buffer_size_", buffer_size)
+    trial.set_user_attr("batch_size_", batch_size)
 
 
     return {
