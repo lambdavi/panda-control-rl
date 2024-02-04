@@ -5,7 +5,7 @@ from stable_baselines3 import DDPG
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
 
-model = DDPG.load("checkpoints/PandaReach_DDPG_50000_steps")
+model = DDPG.load("checkpoints/DDPG_Model_final.zip")
 env = gym.make('PandaReach-v3', render_mode="human")
 
 observation, info = env.reset()
@@ -13,7 +13,6 @@ observation, info = env.reset()
 for _ in range(100):
     action, states_ = model.predict(observation=observation)
     observation, reward, terminated, truncated, info = env.step(action)
-    sleep(0.05)
     if terminated or truncated:
         #print(f"Terminated with status: {'REACHED' if reward+1 > 0 else 'FAILED'}")
         observation, info = env.reset()
