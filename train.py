@@ -1,7 +1,7 @@
 import gymnasium as gym
 import panda_gym
 from argparse import ArgumentParser
-from stable_baselines3 import DDPG
+from stable_baselines3 import DDPG, SAC, DQN
 from stable_baselines3.common.callbacks import CheckpointCallback
 
 parser = ArgumentParser(description="Training of DDPG model for Panda-Gym")
@@ -62,6 +62,15 @@ parser.add_argument(
     choices=["PandaReach-v3", "PandaReachDense-v3", "PandaPickAndPlace-v3", "PandaPickAndPlaceDense-v3"],
     type=str,
 )
+
+parser.add_argument(
+    "--algo",
+    help="algorithm to solve the task",
+    default="ddpg",
+    required=False,
+    choices=["ddpg", "sac", "dqn"],
+    type=str,
+)
 args = parser.parse_args()
 
 ## Parameters
@@ -73,6 +82,7 @@ tau = args.tau
 learning_starts = args.learning_starts
 steps=args.steps
 env_id = args.env_id
+algo = args.algo
 
 # Save a checkpoint every 1000 steps
 checkpoint_callback = CheckpointCallback(save_freq=5000, save_path='./checkpoints/',
@@ -80,18 +90,44 @@ checkpoint_callback = CheckpointCallback(save_freq=5000, save_path='./checkpoint
 
 print("ENV_ID: {}".format(env_id))
 env = gym.make(env_id)
-
-model = DDPG(
-    "MultiInputPolicy",
-    learning_rate=lr,
-    learning_starts=learning_starts,
-    batch_size=bs,
-    buffer_size=buffer_size,
-    tau=tau,
-    gamma=gamma,
-    env=env,        
-    verbose=1,
-)
+if algo=="ddpg":
+    model = DDPG(
+        "MultiInputPolicy",
+        learning_rate=lr,
+        learning_starts=learning_starts,
+        batch_size=bs,
+        buffer_size=buffer_size,
+        tau=tau,
+        gamma=gamma,
+        env=env,        
+        verbose=1,
+    )
+elif algo=="sac":
+    model = SAC(
+        "MultiInputPolicy",
+        learning_rate=lr,
+        learning_starts=learning_starts,
+        batch_size=bs,
+        buffer_size=buffer_size,
+        tau=tau,
+        gamma=gamma,
+        env=env,        
+        verbose=1,
+    )
+elif algo=="dqn":
+    model = DQN(
+        "MultiInputPolicy",
+        learning_rate=lr,
+        learning_starts=learning_starts,
+        batch_size=bs,
+        buffer_size=buffer_size,
+        tau=tau,
+        gamma=gamma,
+        env=env,        
+        verbose=1,
+    )
+else:
+    raise NotImplementedError
 
 model.learn(steps, callback=checkpoint_callback, log_interval=200)
 env.close()
