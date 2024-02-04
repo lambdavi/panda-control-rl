@@ -93,6 +93,6 @@ model = DDPG(
     verbose=1,
 )
 
-model.learn(steps, callback=checkpoint_callback)
+model.learn(steps, callback=checkpoint_callback, log_interval=200)
 env.close()
 model.save(f"models/{env_id}_DDPG_Model_final")
