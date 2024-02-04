@@ -4,5 +4,7 @@ Exploration of techniques to solve tasks with a Panda robotic arm. Simulation ba
 Environment created using: PandaGym.
 Baseline obtained with Stablebaselines3.
 
-## PandaReach-v3 Demo
+## PandaReach
 ![](https://github.com/lambdavi/panda-control-rl/blob/main/media/reach.gif?raw=true)
+
+## PandaPickAndPlace

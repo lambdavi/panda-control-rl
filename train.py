@@ -55,6 +55,14 @@ parser.add_argument(
     required=False,
     type=int,
 )
+parser.add_argument(
+    "--env_id",
+    help="Id of the env",
+    default=50_000,
+    required=True,
+    choices=["PandaReach-v3", "PandaReachDense-v3", "PandaPickAndPlace-v3", "PandaPickAndPlaceDense-v3"],
+    type=str,
+)
 args = parser.parse_args()
 
 ## Parameters
@@ -65,12 +73,13 @@ bs = args.batch_size
 tau = args.tau
 learning_starts = args.learning_starts
 steps=args.steps
+env_id = args.env_id
 
 # Save a checkpoint every 1000 steps
-checkpoint_callback = CheckpointCallback(save_freq=1000, save_path='./logs/',
-                                         name_prefix='rl_model')
+checkpoint_callback = CheckpointCallback(save_freq=5000, save_path='./checkpoints/',
+                                         name_prefix=f'{env_id[:-3]}_DDPG')
 
-env = gym.make("PandaReach-v3")
+env = gym.make(env_id)
 
 model = DDPG(
     "MultiInputPolicy",
@@ -86,4 +95,4 @@ model = DDPG(
 
 model.learn(steps, callback=checkpoint_callback)
 env.close()
-model.save("DDPG_Model_final")
+model.save(f"models/{env_id}_DDPG_Model_final")
