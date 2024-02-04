@@ -5,4 +5,4 @@ Environment created using: PandaGym.
 Baseline obtained with Stablebaselines3.
 
 ## PandaReach-v3 Demo
-![](https://github.com/lambdavi/panda-control-rl/media/reach.gif)
+![](https://github.com/lambdavi/panda-control-rl/blob/main/media/reach.gif?raw=true)
