@@ -2,7 +2,6 @@ import gymnasium as gym
 import panda_gym
 from argparse import ArgumentParser
 from stable_baselines3 import DDPG
-from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import CheckpointCallback
 
 parser = ArgumentParser(description="Training of DDPG model for Panda-Gym")
@@ -58,8 +57,8 @@ parser.add_argument(
 parser.add_argument(
     "--env_id",
     help="Id of the env",
-    default=50_000,
-    required=True,
+    default="PandaReach-v3",
+    required=False,
     choices=["PandaReach-v3", "PandaReachDense-v3", "PandaPickAndPlace-v3", "PandaPickAndPlaceDense-v3"],
     type=str,
 )
@@ -79,6 +78,7 @@ env_id = args.env_id
 checkpoint_callback = CheckpointCallback(save_freq=5000, save_path='./checkpoints/',
                                          name_prefix=f'{env_id[:-3]}_DDPG')
 
+print("ENV_ID: {}".format(env_id))
 env = gym.make(env_id)
 
 model = DDPG(
