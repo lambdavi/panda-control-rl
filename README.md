@@ -3,6 +3,7 @@
 # Panda Control RL Suite   
 ![](https://github.com/lambdavi/panda-control-rl/blob/main/media/reach.gif?raw=true)
 </div>
+
 ## Description   
 The goal of this project is to handle every task in the **panda-gym** library. This repo can also be used as a starting point for further research without having to set-up the project from scratch.
 
