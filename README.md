@@ -22,6 +22,11 @@ Conference
 ## Description   
 The goal of this project is to handle every task in the **panda-gym** library. This repo can also be used as a starting point for further research without having to set-up the project from scratch.
 
+- The simulation is based on PyBullet physics engine wrapped in Gymnasium.
+
+- Environment created using: panda-gym.
+- Baselines obtained with Stablebaselines3.
+
 ## How to run   
 First, install dependencies   
 ```bash
@@ -42,7 +47,7 @@ python train.py --env_id PandaPickAndPlace-v3 --algo ddpg
 python tuning.py --env_id PandaReach-v3 --algo sac
 
 # Visualize agent in action 
-python test.py --env_id PandaReach-v3 --algo ddpg --path models/models/PandaReach_DDPG_50000_steps.zip
+python test.py --env_id PandaReach-v3 --algo ddpg --path models/PandaReach_DDPG_50000_steps.zip
 ```
 
 ### Citation   
