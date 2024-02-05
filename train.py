@@ -86,7 +86,7 @@ algo = args.algo
 
 # Save a checkpoint every 1000 steps
 checkpoint_callback = CheckpointCallback(save_freq=5000, save_path='./checkpoints/',
-                                         name_prefix=f'{env_id[:-3]}_DDPG')
+                                         name_prefix=f'{env_id[:-3]}_{algo.upper()}')
 
 print("ENV_ID: {}".format(env_id))
 env = gym.make(env_id)

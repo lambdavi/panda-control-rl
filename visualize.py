@@ -1,8 +1,20 @@
 import gymnasium as gym
 import panda_gym
 from time import sleep
+from argparse import ArgumentParser
 
-env = gym.make('PandaReach-v3', render_mode="human")
+parser = ArgumentParser(description="Visualize environments")
+parser.add_argument(
+    "--env_id",
+    help="Id of the env",
+    default="PandaReach-v3",
+    required=False,
+    choices=["PandaReach-v3", "PandaReachDense-v3", "PandaPickAndPlace-v3", "PandaPickAndPlaceDense-v3"],
+    type=str,
+)
+args = parser.parse_args()
+
+env = gym.make(args.env_id, render_mode="human")
 
 observation, info = env.reset()
 
