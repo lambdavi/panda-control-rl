@@ -5,12 +5,33 @@ import gymnasium
 import optuna
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
-from stable_baselines3 import DDPG
+from stable_baselines3 import DDPG, SAC, PPO
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.monitor import Monitor
 import torch
-import torch.nn as nn
+from argparse import ArgumentParser
 
+parser = ArgumentParser(description="Tuning of models for Panda-Gym")
+
+parser.add_argument(
+    "--env_id",
+    help="Id of the env",
+    default="PandaReach-v3",
+    required=False,
+    choices=["PandaReach-v3", "PandaReachDense-v3", "PandaPickAndPlace-v3", "PandaPickAndPlaceDense-v3"],
+    type=str,
+)
+
+parser.add_argument(
+    "--algo",
+    help="algorithm to solve the task",
+    default="ddpg",
+    required=False,
+    choices=["ddpg", "sac", "dqn"],
+    type=str,
+)
+
+args = parser.parse_args()
 
 N_TRIALS = 100
 N_STARTUP_TRIALS = 20
@@ -18,8 +39,8 @@ N_EVALUATIONS = 2
 N_TIMESTEPS = int(1e4)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
 N_EVAL_EPISODES = 3
-
-ENV_ID = "PandaReach-v3"
+ALGO = args.algo
+ENV_ID = args.env_id
 
 DEFAULT_HYPERPARAMS = {
     "policy": "MultiInputPolicy",
@@ -42,7 +63,7 @@ def sample_ddpg_params(trial: optuna.Trial) -> Dict[str, Any]:
     trial.set_user_attr("gamma_", gamma)
     trial.set_user_attr("buffer_size_", buffer_size)
     trial.set_user_attr("batch_size_", batch_size)
-
+    
 
     return {
         "gamma": gamma,
@@ -50,6 +71,58 @@ def sample_ddpg_params(trial: optuna.Trial) -> Dict[str, Any]:
         "batch_size":batch_size,
         "tau":tau,
         "learning_starts": learning_starts,
+        "learning_rate": learning_rate,
+    }
+
+def sample_sac_params(trial: optuna.Trial) -> Dict[str, Any]:
+    """Sampler for SAC hyperparameters."""
+
+    gamma = 1.0 - trial.suggest_float("gamma", 0.0001, 0.1, log=True)
+    buffer_size = 10**trial.suggest_int("buffer_size", 2, 6)
+    batch_size = 2**trial.suggest_int("batch_size", 5, 11)
+    tau = trial.suggest_float("tau", 0.0005, 0.1, log=True)
+    learning_starts = trial.suggest_int("learning_starts", 50, 200)
+    learning_rate = trial.suggest_float("lr", 5e-4, 1, log=True)
+    target_update_interval = trial.suggest_int("target_update_interval", 1, 10)
+
+
+    # Display true values.
+    trial.set_user_attr("gamma_", gamma)
+    trial.set_user_attr("buffer_size_", buffer_size)
+    trial.set_user_attr("batch_size_", batch_size)
+    
+
+    return {
+        "gamma": gamma,
+        "buffer_size": buffer_size,
+        "batch_size":batch_size,
+        "tau":tau,
+        "learning_starts": learning_starts,
+        "learning_rate": learning_rate,
+        "target_update_interval": target_update_interval
+    }
+
+def sample_ppo_params(trial: optuna.Trial) -> Dict[str, Any]:
+    """Sampler for PPO hyperparameters."""
+    # buffer_size, learning_starts, batch_size, tau, 
+    n_steps = 2**trial.suggest_int("n_steps", 9, 12)
+    n_epochs = trial.suggest_int("n_epochs", 5, 15)
+    gae_lambda = trial.suggest_float("gae_lambda", 0.9, 1, log=True)
+    gamma = 1.0 - trial.suggest_float("gamma", 0.0001, 0.1, log=True)
+    batch_size = 2**trial.suggest_int("batch_size", 4, 9)
+    learning_rate = trial.suggest_float("lr", 5e-4, 0.1, log=True)
+
+    # Display true values.
+    trial.set_user_attr("gamma_", gamma)
+    trial.set_user_attr("batch_size_", batch_size)
+    trial.set_user_attr("n_steps", n_steps)
+
+    return {
+        "n_steps": n_steps,
+        "n_epochs": n_epochs,
+        "gae_lambda": gae_lambda,
+        "gamma": gamma,
+        "batch_size":batch_size,
         "learning_rate": learning_rate,
     }
 
@@ -92,9 +165,18 @@ class TrialEvalCallback(EvalCallback):
 def objective(trial: optuna.Trial) -> float:
     kwargs = DEFAULT_HYPERPARAMS.copy()
     # Sample hyperparameters.
-    kwargs.update(sample_ddpg_params(trial))
     # Create the RL model.
-    model = DDPG(**kwargs)
+    if ALGO=="ddpg":
+        kwargs.update(sample_ddpg_params(trial))
+        model = DDPG(**kwargs)
+    elif ALGO=="sac":
+        kwargs.update(sample_sac_params(trial))
+        model = SAC(**kwargs)
+    elif ALGO=="ppo":
+        kwargs.update(sample_ppo_params(trial))
+        model = PPO(**kwargs)
+    else:
+        raise NotImplementedError
     # Create env used for evaluation.
     eval_env = Monitor(gymnasium.make(ENV_ID))
     # Create the callback that will periodically evaluate and report the performance.

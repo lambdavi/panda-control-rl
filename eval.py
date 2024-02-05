@@ -1,27 +1,63 @@
 import gymnasium as gym
 import panda_gym
-from time import sleep
-from stable_baselines3 import DDPG
+from stable_baselines3 import DDPG, SAC, PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
+from argparse import ArgumentParser
+from os import path
+parser = ArgumentParser(description="Tuning of models for Panda-Gym")
 
-model = DDPG.load("checkpoints/PandaReach_DDPG_50000_steps.zip")
-env = gym.make('PandaReach-v3', render_mode="human")
+parser.add_argument(
+    "--env_id",
+    help="Id of the env",
+    default="PandaReach-v3",
+    required=True,
+    choices=["PandaReach-v3", "PandaReachDense-v3", "PandaPickAndPlace-v3", "PandaPickAndPlaceDense-v3"],
+    type=str,
+)
 
-observation, info = env.reset()
+parser.add_argument(
+    "--algo",
+    help="algorithm to solve the task",
+    default="ddpg",
+    required=True,
+    choices=["ddpg", "sac", "dqn"],
+    type=str,
+)
 
-for _ in range(100):
-    action, states_ = model.predict(observation=observation)
-    observation, reward, terminated, truncated, info = env.step(action)
-    sleep(0.05)
-    if terminated or truncated:
-        observation, info = env.reset()
+parser.add_argument(
+    "--path",
+    help="path to the trained model",
+    default=None,
+    required=False,
+    type=str,
+)
+
+args = parser.parse_args()
+
+ALGO = args.algo
+PATH = args.path
+ENV_ID = args.env_id
+
+if PATH is None:
+    PATH = f"checkpoints/{ENV_ID[:-3]}_{ALGO.upper()}_final.zip"
+    print(f"Path not specified. Trying from loading: {PATH}")
+
+if not path.exists(PATH):
+    raise FileNotFoundError
     
-env.close()
+if ALGO=="ddpg":        
+    model = DDPG.load(PATH)
+elif ALGO == "sac":
+    model = SAC.load(PATH)
+elif ALGO == "ppo":
+    model = PPO.load(PATH)
+else:
+    raise NotImplementedError
 
 # EVALUATION START
 print("EVALUATING")
-eval_env = gym.make("PandaReach-v3", render_mode="human")
+eval_env = gym.make(ENV_ID, render_mode="human")
 
 eval_env = Monitor(eval_env)
 # Random Agent, before training

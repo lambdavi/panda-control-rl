@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 from stable_baselines3 import DDPG, SAC, DQN
 from stable_baselines3.common.callbacks import CheckpointCallback
 
-parser = ArgumentParser(description="Training of DDPG model for Panda-Gym")
+parser = ArgumentParser(description="Training of models for Panda-Gym")
 parser.add_argument(
     "--lr",
     help="Learning rate",
@@ -131,4 +131,4 @@ else:
 
 model.learn(steps, callback=checkpoint_callback, log_interval=200)
 env.close()
-model.save(f"models/{env_id}_DDPG_Model_final")
+model.save(f"models/{env_id}_{algo.upper()}_final")
