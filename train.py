@@ -136,7 +136,6 @@ elif algo=="sac":
         verbose=1,
         tensorboard_log=f"runs/{run.id}",
         device=device,
-        policy_kwargs=dict(net_arch=[512, 512, 512], n_critics=2)
     )
 elif algo=="dqn":
     model = DQN(
