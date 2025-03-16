@@ -1,10 +1,14 @@
 import gymnasium as gym
 import panda_gym
+import torch
+import wandb
 from argparse import ArgumentParser
 from stable_baselines3 import DDPG, SAC, DQN
 from stable_baselines3.common.callbacks import CheckpointCallback
+from wandb.integration.sb3 import WandbCallback
 
 parser = ArgumentParser(description="Training of models for Panda-Gym")
+
 parser.add_argument(
     "--lr",
     help="Learning rate",
@@ -15,7 +19,7 @@ parser.add_argument(
 parser.add_argument(
     "--gamma",
     help="Gamma value",
-    default=0.99,
+    default=0.95,
     required=False,
     type=float,
 )
@@ -29,14 +33,14 @@ parser.add_argument(
 parser.add_argument(
     "--batch_size",
     help="Batch size",
-    default=100,
+    default=2048,
     required=False,
     type=int,
 )
 parser.add_argument(
     "--tau",
     help="tau value",
-    default=0.005,
+    default=0.05,
     required=False,
     type=float,
 )
@@ -50,7 +54,7 @@ parser.add_argument(
 parser.add_argument(
     "--steps",
     help="#steps",
-    default=50_000,
+    default=150_000,
     required=False,
     type=int,
 )
@@ -59,7 +63,7 @@ parser.add_argument(
     help="Id of the env",
     default="PandaReach-v3",
     required=False,
-    choices=["PandaReach-v3", "PandaReachDense-v3", "PandaPickAndPlace-v3", "PandaPickAndPlaceDense-v3"],
+    choices=["PandaReach-v3", "PandaReachDense-v3", "PandaStack-v3", "PandaStackDense-v3", "PandaPickAndPlace-v3", "PandaPickAndPlaceDense-v3"],
     type=str,
 )
 
@@ -72,6 +76,15 @@ parser.add_argument(
     type=str,
 )
 args = parser.parse_args()
+
+
+run = wandb.init(
+    project="sb3",
+    config=args,
+    sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
+    monitor_gym=True,  # auto-upload the videos of agents playing the game
+    # save_code=True,  # optional
+)
 
 ## Parameters
 lr = args.lr
@@ -88,6 +101,13 @@ algo = args.algo
 checkpoint_callback = CheckpointCallback(save_freq=5000, save_path='./checkpoints/',
                                          name_prefix=f'{env_id[:-3]}_{algo.upper()}')
 
+if torch.cuda.is_available():
+    device = "cuda"
+elif torch.backends.mps.is_available():
+    device = "mps"
+else:
+    device = "cpu"
+
 print("ENV_ID: {}".format(env_id))
 env = gym.make(env_id)
 if algo=="ddpg":
@@ -101,6 +121,7 @@ if algo=="ddpg":
         gamma=gamma,
         env=env,        
         verbose=1,
+        device=device
     )
 elif algo=="sac":
     model = SAC(
@@ -113,6 +134,9 @@ elif algo=="sac":
         gamma=gamma,
         env=env,        
         verbose=1,
+        tensorboard_log=f"runs/{run.id}",
+        device=device,
+        policy_kwargs=dict(net_arch=[512, 512, 512], n_critics=2)
     )
 elif algo=="dqn":
     model = DQN(
@@ -125,10 +149,17 @@ elif algo=="dqn":
         gamma=gamma,
         env=env,        
         verbose=1,
+        device=device
     )
 else:
     raise NotImplementedError
-
-model.learn(steps, callback=checkpoint_callback, log_interval=200)
+model.learn(steps, 
+            callback=WandbCallback(
+                    model_save_path=f"models/{run.id}",
+                    verbose=2,
+                ), 
+            log_interval=50, 
+            progress_bar=True)
 env.close()
 model.save(f"models/{env_id}_{algo.upper()}_final")
+run.finish()
