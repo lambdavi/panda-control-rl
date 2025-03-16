@@ -2,10 +2,31 @@ import gymnasium as gym
 import panda_gym
 import torch
 import wandb
+from typing import Callable
+
 from argparse import ArgumentParser
-from stable_baselines3 import DDPG, SAC, DQN
+from stable_baselines3 import DDPG, SAC, DQN, TD3
 from stable_baselines3.common.callbacks import CheckpointCallback
 from wandb.integration.sb3 import WandbCallback
+
+def linear_schedule(initial_value: float) -> Callable[[float], float]:
+    """
+    Linear learning rate schedule.
+
+    :param initial_value: Initial learning rate.
+    :return: schedule that computes
+      current learning rate depending on remaining progress
+    """
+    def func(progress_remaining: float) -> float:
+        """
+        Progress will decrease from 1 (beginning) to 0.
+
+        :param progress_remaining:
+        :return: current learning rate
+        """
+        return progress_remaining * initial_value
+
+    return func
 
 parser = ArgumentParser(description="Training of models for Panda-Gym")
 
@@ -72,7 +93,7 @@ parser.add_argument(
     help="algorithm to solve the task",
     default="ddpg",
     required=False,
-    choices=["ddpg", "sac", "dqn"],
+    choices=["ddpg", "sac", "dqn", "td3"],
     type=str,
 )
 args = parser.parse_args()
@@ -149,6 +170,24 @@ elif algo=="dqn":
         env=env,        
         verbose=1,
         device=device
+    )
+elif algo=="td3":
+    import numpy as np
+    from stable_baselines3.common.noise import NormalActionNoise,OrnsteinUhlenbeckActionNoise
+    n_actions = env.action_space.shape[-1]
+    orstein_noise = OrnsteinUhlenbeckActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
+    model = TD3(
+        "MultiInputPolicy",
+        action_noise=orstein_noise,
+        learning_rate=linear_schedule(lr),
+        learning_starts=learning_starts,
+        batch_size=bs,
+        buffer_size=buffer_size,
+        tau=tau,
+        gamma=gamma,
+        env=env,        
+        verbose=1,
+        device=device,
     )
 else:
     raise NotImplementedError
