@@ -175,12 +175,13 @@ elif algo=="td3":
     import numpy as np
     from stable_baselines3.common.noise import NormalActionNoise,OrnsteinUhlenbeckActionNoise
     n_actions = env.action_space.shape[-1]
-    orstein_noise = OrnsteinUhlenbeckActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
+    action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
     model = TD3(
         "MultiInputPolicy",
-        action_noise=orstein_noise,
+        action_noise=action_noise,
         learning_rate=linear_schedule(lr),
         learning_starts=learning_starts,
+        policy_kwargs=dict(net_arch=[512, 512, 512], n_critics=2),
         batch_size=bs,
         buffer_size=buffer_size,
         tau=tau,
