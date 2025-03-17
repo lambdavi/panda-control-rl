@@ -5,7 +5,7 @@ import wandb
 from typing import Callable
 
 from argparse import ArgumentParser
-from stable_baselines3 import DDPG, SAC, DQN, TD3
+from stable_baselines3 import DDPG, SAC, DQN, TD3, TQC
 from stable_baselines3.common.callbacks import CheckpointCallback
 from wandb.integration.sb3 import WandbCallback
 
@@ -93,7 +93,7 @@ parser.add_argument(
     help="algorithm to solve the task",
     default="ddpg",
     required=False,
-    choices=["ddpg", "sac", "dqn", "td3"],
+    choices=["ddpg", "sac", "dqn", "td3", "tqc"],
     type=str,
 )
 args = parser.parse_args()
@@ -184,6 +184,27 @@ elif algo=="td3":
         policy_kwargs=dict(net_arch=[512, 512, 512], n_critics=2),
         batch_size=bs,
         buffer_size=buffer_size,
+        tau=tau,
+        gamma=gamma,
+        env=env,        
+        verbose=1,
+        device=device,
+    )
+elif algo=="tqc":
+    import numpy as np
+    from stable_baselines3.common.noise import NormalActionNoise,OrnsteinUhlenbeckActionNoise
+    n_actions = env.action_space.shape[-1]
+    action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
+    model = TQC(
+        "MultiInputPolicy",
+        action_noise=action_noise,
+        learning_rate=linear_schedule(lr),
+        learning_starts=learning_starts,
+        policy_kwargs=dict(net_arch=[512, 512, 512], n_critics=2),
+        batch_size=bs,
+        buffer_size=buffer_size,
+        replay_buffer_class='HerReplayBuffer',
+        replay_buffer_kwargs=dict( online_sampling=True, goal_selection_strategy='future', n_sampled_goal=4, ),
         tau=tau,
         gamma=gamma,
         env=env,        
